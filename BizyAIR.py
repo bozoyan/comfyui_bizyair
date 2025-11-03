@@ -385,7 +385,7 @@ class BA_Float_Value:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 100.0, "step": 0.1}),
+                "value": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 2000.0, "step": 0.1}),
                 "node_name": ("STRING", {"default": "99:easy float.value", "multiline": False}),
                 "use_float": ("BOOLEAN", {"default": False}),
             }
