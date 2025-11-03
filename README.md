@@ -63,7 +63,7 @@ pip install -r requirements.txt
 ## 配置
 
 ### API密钥设置
-[官网Key密钥获取](assets/key.mp4)
+
 ![](assets/17621747711597.jpg)
 从https://bizyair.cn/官网上复制key，
 ![](assets/17621748055361.jpg)
