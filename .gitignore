@@ -1,3 +1,92 @@
+API.md
+API.py
+参考.md
+参考.py
+开发.md
+开发.py
+api_key.ini
+
+pic_json/
+image/
+.cursor/
+.lingma/
+file/fonts/
+SOFT/
+misc/
+output/slicer_opt
+
+
+.cache-win/
+logs/
+dist/
+dist-win/
+release/
+test-release/
+build/
+build-win/
+dist-test/
+dist-test-win/
+debug/
+debug-win/
+debug-build/
+debug-win-build/
+debug-release/
+debug-win-release/
+.idea/
+.github/
+.editorconfig
+.editorconfig.sample
+
+**/._*
+**/.AppleDouble
+**/.Spotlight-V100
+**/.Trashes
+**/.VolumeIcon.icns
+**/.fseventsd
+**/.TemporaryItems
+**/.DocumentRevisions-V100
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+# 忽略所有 __pycache__ 文件夹及其子目录
+__pycache__/
+**/__pycache__/
+**/cache/
+**/temp/
+**/key/
+key
+#阿里云密钥填写
+AssetKey.json
+.DS_Store
+**/.cursor/
+
+github
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
