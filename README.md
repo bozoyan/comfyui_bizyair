@@ -111,9 +111,13 @@ console.log('生成结果:', result);
 主要是在 comfyui 中填写 API 接口代码里面的**web_app_id**，以及**input_values** 的各个数据字段。
 ![](assets/17621746420934.jpg)
 参考工作流： [2025-BizyAIR.json](assets/2025-BizyAIR.json)
-**注意**
-1，默认数字是整数，需要浮点，点开 **use_float** 就可以。
-![](assets/17621749309191.jpg)2，图片的节点也是如此，有 **use_url** URL 图片启用。
+
+### **注意**
+
+1、默认数字是整数，需要浮点，点开 **use_float** 就可以。
+![](assets/17621749309191.jpg)
+
+2，图片的节点也是如此，有 **use_url** URL 图片启用。
 ![](assets/17621753327154.jpg)
 
 
