@@ -1,0 +1,14 @@
+[project]
+name = "comfyui_bizyair"
+description = "Bizyair AI 应用的 comfyui 节点包"
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/bozoyan/comfyui_bizyair"
+
+
+[tool.comfy]
+PublisherId = "bozoyan"
+DisplayName = "comfyui_bizyair"
+Icon = ""
