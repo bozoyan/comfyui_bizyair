@@ -48,9 +48,13 @@
 
 ## 开发命令
 
-### 依赖管理
+### 安装与依赖管理
 ```bash
-# 检查包要求和版本
+# 在comfyui的插件custom_nodes目录中
+git clone https://github.com/bozoyan/comfyui_bizyair.git
+cd comfyui_bizyair
+
+# 检查包要求和版本，一般是不用安装包依赖
 python check_requirements.py
 
 # 安装依赖（如有需要）
@@ -64,8 +68,11 @@ pip install -r requirements.txt
 
 ### API密钥设置
 
+从https://bizyair.cn/
+官网上复制key，
+
 ![](assets/17621747711597.jpg)
-从https://bizyair.cn/官网上复制key，
+
 ![](assets/17621748055361.jpg)
 在插件目录内新建API密钥文件：
 ![](assets/17621741837764.jpg)
@@ -82,6 +89,7 @@ KEY的配置有两种方式：
 · 2、查找API调用代码
 ![](assets/17621744797246.jpg)
 ![](assets/17621745262032.jpg)
+
 ``` javascript
 // JavaScript 示例代码
 const response = await fetch('https://api.bizyair.cn/w/v1/webapp/task/openapi/create', {
@@ -108,7 +116,8 @@ const response = await fetch('https://api.bizyair.cn/w/v1/webapp/task/openapi/cr
 const result = await response.json();
 console.log('生成结果:', result);
 ```
-主要是在 comfyui 中填写 API 接口代码里面的**web_app_id**，以及**input_values** 的各个数据字段。
+
+原理就是在 comfyui 中添加节点，填写 API 接口代码里面的**web_app_id**，以及**input_values** 的各个数据字段。
 ![](assets/17621746420934.jpg)
 参考工作流： [2025-BizyAIR.json](assets/2025-BizyAIR.json)
 
