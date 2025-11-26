@@ -104,14 +104,65 @@ def image_file_to_base64(image_path):
         print(f"❌ 图像文件转换base64失败: {e}")
         return None
 
+# 全局变量用于追踪当前的Key索引
+CURRENT_KEY_INDEX = 0
+
 def get_bizyair_api_key():
-    """获取BizyAIR API密钥"""
+    """获取BizyAIR API密钥，支持多Key轮询"""
+    global CURRENT_KEY_INDEX
     key_path = os.path.join(os.path.dirname(__file__), "key", "siliconflow_API_key.txt")
     try:
+        if not os.path.exists(key_path):
+            return ""
+            
         with open(key_path, "r", encoding="utf-8") as f:
-            return f.readline().strip()
-    except FileNotFoundError:
+            # 读取所有行并过滤空行
+            keys = [line.strip() for line in f.readlines() if line.strip()]
+            
+        if not keys:
+            return ""
+            
+        # 轮询选择
+        if CURRENT_KEY_INDEX >= len(keys):
+            CURRENT_KEY_INDEX = 0
+            
+        selected_key = keys[CURRENT_KEY_INDEX]
+        
+        # 更新索引以供下次调用
+        CURRENT_KEY_INDEX = (CURRENT_KEY_INDEX + 1) % len(keys)
+        
+        # print(f"🔑 使用API Key [{CURRENT_KEY_INDEX}/{len(keys)}]: {selected_key[:8]}...")
+        return selected_key
+    except Exception as e:
+        print(f"❌ 读取API Key失败: {e}")
         return ""
+
+def save_bizyair_api_key(new_key):
+    """保存新的API Key到文件，自动去重"""
+    if not new_key or not new_key.strip():
+        return
+        
+    key_path = os.path.join(os.path.dirname(__file__), "key", "siliconflow_API_key.txt")
+    try:
+        # 读取现有Keys
+        keys = []
+        if os.path.exists(key_path):
+            with open(key_path, "r", encoding="utf-8") as f:
+                keys = [line.strip() for line in f.readlines() if line.strip()]
+        
+        # 添加新Key（如果不存在）
+        clean_key = new_key.strip()
+        if clean_key not in keys:
+            keys.append(clean_key)
+            
+            # 写回文件
+            with open(key_path, "w", encoding="utf-8") as f:
+                for key in keys:
+                    f.write(f"{key}\n")
+            print(f"✅ 新API Key已保存到: {key_path}")
+            
+    except Exception as e:
+        print(f"❌ 保存API Key失败: {e}")
 
 def image_to_base64(image_tensor):
     """将图像张量转换为base64字符串"""
@@ -200,7 +251,11 @@ class BA_BizyAIR_Main:
     
     def process_api_call(self, web_app_id, api_key="", **kwargs):
         # 获取API密钥
-        if not api_key.strip():
+        if api_key and api_key.strip():
+            # 如果提供了Key，尝试保存
+            save_bizyair_api_key(api_key.strip())
+        else:
+            # 否则从文件获取
             api_key = get_bizyair_api_key()
         
         if not api_key:
@@ -385,7 +440,7 @@ class BA_Float_Value:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "value": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 2000.0, "step": 0.1}),
+                "value": ("FLOAT", {"default": 2.0, "min": 0.0, "max": 2048.0, "step": 0.1}),
                 "node_name": ("STRING", {"default": "99:easy float.value", "multiline": False}),
                 "use_float": ("BOOLEAN", {"default": False}),
             }
