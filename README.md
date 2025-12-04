@@ -1,5 +1,6 @@
 这是一个用于BizyAIR AI应用的ComfyUI插件（comfyui_bizyair），提供了用于与BizyAIR API服务集成的自定义节点。该插件允许用户通过BizyAIR的Web API远程调用AI服务。
 
+![](assets/main.webp)
 ## 架构
 
 该插件遵循标准的ComfyUI自定义节点架构：

@@ -221,6 +221,22 @@ def url_to_tensor(image_url):
         print(f"🖼️ 返回默认空白图像: {empty_image.shape}")
         return empty_image
 
+def url_to_latent(latent_url):
+    """将URL Latent文件转换为ComfyUI Latent格式"""
+    try:
+        # print(f"🌐 开始下载Latent: {latent_url}")
+        response = requests.get(latent_url, timeout=60)
+        response.raise_for_status()
+        
+        latent_data = BytesIO(response.content)
+        # ComfyUI .latent files are torch serialized dicts
+        latent = torch.load(latent_data, map_location="cpu")
+        print(f"✅ Latent加载成功: {latent.get('samples', torch.tensor([])).shape}")
+        return latent
+    except Exception as e:
+        print(f"❌ 加载Latent失败: {e}")
+        return {"samples": torch.zeros((1, 4, 8, 8), dtype=torch.float32)}
+
 class BA_BizyAIR_Main:
     """BizyAIR主界面API调用节点"""
     
@@ -244,8 +260,8 @@ class BA_BizyAIR_Main:
             }
         }
     
-    RETURN_TYPES = ("STRING", "STRING", "STRING", "IMAGE")
-    RETURN_NAMES = ("response_json", "task_id", "image_url", "image")
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "IMAGE", "STRING", "STRING")
+    RETURN_NAMES = ("response_json", "task_id", "image_url", "image", "latent_url", "txt_url")
     FUNCTION = "process_api_call"
     CATEGORY = "🇨🇳BOZO/BizyAir"
     
@@ -260,7 +276,7 @@ class BA_BizyAIR_Main:
         
         if not api_key:
             print("错误: 未找到API密钥")
-            return ("{}", "", "", torch.zeros((1, 64, 64, 3), dtype=torch.float32))
+            return ("{}", "", "", torch.zeros((1, 64, 64, 3), dtype=torch.float32), "", "")
         
         # 构建请求数据
         input_values = {}
@@ -329,34 +345,62 @@ class BA_BizyAIR_Main:
             task_id = result.get('request_id', '')
             print(f"任务 ID：{task_id}")
             
-            # 获取图像URL和转换为张量
-            image_url = ""
-            image_tensor = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
+            # 初始化结果容器
+            all_image_urls = []
+            image_tensors = []
+            latent_urls = []
+            text_urls = []
             
-            # 只有在成功时才尝试获取图像
             status = result.get('status', '').lower()
-            if status in ['completed', 'success'] and 'outputs' in result and len(result['outputs']) > 0:
-                try:
-                    # 获取第一个输出的图像URL
-                    output = result['outputs'][0]
-                    if 'object_url' in output:
-                        image_url = output['object_url']
-                        print(f"✅ 获取图像URL成功: {image_url}")
+            if status in ['completed', 'success'] and 'outputs' in result:
+                for output in result['outputs']:
+                    obj_url = output.get('object_url', '')
+                    ext = output.get('output_ext', '').lower()
+                    
+                    if not obj_url:
+                        continue
                         
-                        # 下载并转换图像
-                        # print(f"📥 正在下载图像: {image_url}")
-                        image_tensor = url_to_tensor(image_url)
-                        # print(f"🖼️ 图像下载并转换为张量成功，尺寸: {image_tensor.shape}")
-                    else:
-                        print("⚠️ 输出中未找到 object_url 字段")
-                except Exception as e:
-                    print(f"❌ 处理图像输出时发生错误: {e}")
-            elif status == 'failed':
-                print("❌ 任务执行失败，返回空白图像")
+                    if ext in ['.png', '.jpg', '.jpeg', '.webp', '.bmp']:
+                        all_image_urls.append(obj_url)
+                        # 下载图像
+                        try:
+                            tensor = url_to_tensor(obj_url)
+                            image_tensors.append(tensor)
+                        except Exception as e:
+                            print(f"❌ 下载图像失败 {obj_url}: {e}")
+                            
+                    elif ext in ['.latent']:
+                        latent_urls.append(obj_url)
+                            
+                    elif ext in ['.txt', '.text', '.json', '.md']:
+                        text_urls.append(obj_url)
+
+            # 处理图像合并
+            if image_tensors:
+                # 检查尺寸一致性
+                first_shape = image_tensors[0].shape
+                valid_tensors = [t for t in image_tensors if t.shape == first_shape]
+                if len(valid_tensors) < len(image_tensors):
+                     print(f"⚠️ 警告: 忽略了 {len(image_tensors) - len(valid_tensors)} 张尺寸不匹配的图像")
+                
+                if valid_tensors:
+                    final_image = torch.cat(valid_tensors, dim=0)
+                    print(f"✅ 合并了 {len(valid_tensors)} 张图像，最终形状: {final_image.shape}")
+                else:
+                    final_image = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
             else:
-                print(f"⚠️ 未知状态: {status}，返回空白图像")
+                final_image = torch.zeros((1, 64, 64, 3), dtype=torch.float32)
             
-            return (response_json, task_id, image_url, image_tensor)
+            # 处理Latent URL合并
+            final_latent_url = "\n".join(latent_urls)
+            
+            # 处理文本URL合并
+            final_text_url = "\n".join(text_urls)
+            
+            # 处理图片URL合并
+            final_image_url_str = "\n".join(all_image_urls)
+            
+            return (response_json, task_id, final_image_url_str, final_image, final_latent_url, final_text_url)
             
         except Exception as e:
             print(f"BizyAIR API调用失败: {e}")
@@ -364,7 +408,7 @@ class BA_BizyAIR_Main:
                 "error": str(e),
                 "message": "API调用过程中发生错误"
             }
-            return (json.dumps(error_response, ensure_ascii=False, indent=2), "", "", torch.zeros((1, 64, 64, 3), dtype=torch.float32))
+            return (json.dumps(error_response, ensure_ascii=False, indent=2), "", "", torch.zeros((1, 64, 64, 3), dtype=torch.float32), "", "")
 
 class BA_LoadImage:
     """BizyAIR图像输入节点"""
